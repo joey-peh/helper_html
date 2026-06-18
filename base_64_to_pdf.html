@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Downloader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-size: 12px;
+            font-family: monospace;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .field {
+            margin-bottom: 16px;
+        }
+        .preview {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 12px;
+            font-size: 13px;
+            color: #555;
+            display: none;
+        }
+        .preview span {
+            font-weight: bold;
+            color: #333;
+        }
+        button {
+            margin-top: 4px;
+            padding: 10px 24px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+        #message {
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+		
+  .container {
+    font-family: Arial, sans-serif;
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 8px;
+	padding-bottom: 20px;
+  }
+
+  #myInput {
+    width: 500px;
+    height: 80px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    resize: vertical;
+    background-color: #f5f5f5;
+    color: #333;
+  }
+
+  button {
+    padding: 8px 16px;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  button:hover {
+    background-color: #0052a3;
+  }
+    </style>
+</head>
+<body>
+    <h1>Convert from JSON Base64 to PDF</h1>
+	
+	<div class="container">
+	 <textarea id="myInput">{
+  "fileName": "hello_world.pdf",
+  "byteString": "JVBERi0xLjQKMSAwIG9iago8PC9UeXBlIC9DYXRhbG9nCi9QYWdlcyAyIDAgUgo+PgplbmRvYmoK MiAwIG9iago8PC9UeXBlIC9QYWdlcwovS2lkcyBbMyAwIFJdCi9Db3VudCAxCj4+CmVuZG9iagoz IDAgb2JqCjw8L1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA1OTUgODQy XQovQ29udGVudHMgNSAwIFIKL1Jlc291cmNlcyA8PC9Qcm9jU2V0IFsvUERGIC9UZXh0XQovRm9u dCA8PC9GMSA0IDAgUj4+Cj4+Cj4+CmVuZG9iago0IDAgb2JqCjw8L1R5cGUgL0ZvbnQKL1N1YnR5 cGUgL1R5cGUxCi9OYW1lIC9GMQovQmFzZUZvbnQgL0hlbHZldGljYQovRW5jb2RpbmcgL01hY1Jv bWFuRW5jb2RpbmcKPj4KZW5kb2JqCjUgMCBvYmoKPDwvTGVuZ3RoIDUzCj4+CnN0cmVhbQpCVAov RjEgMjAgVGYKMjIwIDQwMCBUZAooRHVtbXkgUERGKSBUagpFVAplbmRzdHJlYW0KZW5kb2JqCnhy ZWYKMCA2CjAwMDAwMDAwMDAgNjU1MzUgZgowMDAwMDAwMDA5IDAwMDAwIG4KMDAwMDAwMDA2MyAw MDAwMCBuCjAwMDAwMDAxMjQgMDAwMDAgbgowMDAwMDAwMjc3IDAwMDAwIG4KMDAwMDAwMDM5MiAw MDAwMCBuCnRyYWlsZXIKPDwvU2l6ZSA2Ci9Sb290IDEgMCBSCj4+CnN0YXJ0eHJlZgo0OTUKJSVF T0YK"
+}</textarea>
+	  <button onclick="copyToClipboard()">Copy sample payload</button>
+	</div>
+	
+    <div class="field">
+        <label for="jsonInput">Paste JSON here</label>
+        <textarea id="jsonInput" placeholder='Paste your JSON here, e.g. { "fileName": "...", "byteString": "..." }'
+            oninput="parseInput()"></textarea>
+    </div>
+
+    <div class="preview" id="preview">
+        Detected file name: <span id="previewName"></span>
+    </div>
+
+    <br>
+    <button id="downloadBtn" onclick="downloadFile()" disabled>Download PDF</button>
+    <p id="message"></p>
+
+    <script>
+        let parsedFileName = '';
+        let parsedByteString = '';
+
+        function parseInput() {
+            const raw = document.getElementById('jsonInput').value.trim();
+            const message = document.getElementById('message');
+            const preview = document.getElementById('preview');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            message.textContent = '';
+            preview.style.display = 'none';
+            downloadBtn.disabled = true;
+            parsedFileName = '';
+            parsedByteString = '';
+
+            if (!raw) return;
+
+            try {
+                // Wrap in braces if it looks like partial JSON
+                const toparse = raw.startsWith('{') ? raw : `{${raw}}`;
+                const json = JSON.parse(toparse);
+
+                // Try common key names for the base64 and file name
+                parsedByteString = json.byteString || json.base64 || json.fileContent || json.content || '';
+                parsedFileName = json.fileName || json.filename || json.name || 'download';
+
+                if (!parsedByteString) {
+                    message.className = 'error';
+                    message.textContent = 'Could not find a Base64 field (expected: byteString, base64, fileContent, or content).';
+                    return;
+                }
+
+                document.getElementById('previewName').textContent = parsedFileName;
+                preview.style.display = 'block';
+                downloadBtn.disabled = false;
+
+            } catch (e) {
+                message.className = 'error';
+                message.textContent = 'Could not parse JSON: ' + e.message;
+            }
+        }
+
+        function downloadFile() {
+            const message = document.getElementById('message');
+
+            try {
+                const blob = new Blob(
+                    [Uint8Array.from(atob(parsedByteString), c => c.charCodeAt(0))],
+                    { type: 'application/pdf' }
+                );
+
+                const fileName = parsedFileName.endsWith('.pdf') ? parsedFileName : parsedFileName + '.pdf';
+                const fileURL = URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = fileURL;
+                a.download = fileName;
+                a.click();
+                URL.revokeObjectURL(fileURL);
+
+                message.className = 'success';
+                message.textContent = `Downloaded as "${fileName}" successfully!`;
+            } catch (e) {
+                message.className = 'error';
+                message.textContent = 'Error decoding Base64: ' + e.message;
+            }
+        }
+		
+		
+		function copyToClipboard() {
+		  const textarea = document.getElementById("myInput");
+		  navigator.clipboard.writeText(textarea.value)
+			.then(() => alert("Copied!"))
+			.catch(err => console.error("Failed to copy: ", err));
+		}	
+		</script>
+    </script>
+</body>
+</html>
