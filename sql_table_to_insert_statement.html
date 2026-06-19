@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Table to INSERT Statements</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 8px;
+      color: #1a1a2e;
+    }
+
+    p.subtitle {
+      color: #666;
+      margin-bottom: 28px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 28px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      font-size: 0.9rem;
+      color: #444;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-family: 'Courier New', monospace;
+      resize: vertical;
+      min-height: 180px;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    .excluded-defaults {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      background: #ede9fe;
+      color: #4f46e5;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .tag.user-tag {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .tag.user-tag .remove-tag {
+      margin-left: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      line-height: 1;
+      color: #b45309;
+    }
+
+    .tag.user-tag .remove-tag:hover {
+      color: #92400e;
+    }
+
+    .add-exclude-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .add-exclude-row input {
+      margin-bottom: 0;
+      flex: 1;
+    }
+
+    .btn-add {
+      padding: 10px 16px;
+      background: #f3f4f6;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #444;
+      transition: background 0.2s;
+    }
+
+    .btn-add:hover { background: #e5e7eb; }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .btn-primary {
+      background: #4f46e5;
+      color: white;
+    }
+
+    .btn-primary:hover { background: #4338ca; }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #333;
+    }
+
+    .btn-secondary:hover { background: #d1d5db; }
+
+    .btn-copy {
+      background: #10b981;
+      color: white;
+      margin-left: auto;
+    }
+
+    .btn-copy:hover { background: #059669; }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .output-header h2 {
+      font-size: 1rem;
+      color: #1a1a2e;
+    }
+
+    #output {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 80px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .error {
+      color: #f38ba8;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ede9fe;
+      color: #4f46e5;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-left: 10px;
+    }
+
+    #copyFeedback {
+      font-size: 0.8rem;
+      color: #10b981;
+      margin-left: 10px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid #f0f0f0;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>SQL Table → INSERT Statements</h1>
+    <p class="subtitle">Paste your SQL table data (tab-separated or with headers) and generate ready-to-use INSERT statements.</p>
+
+    <div class="card">
+      <label for="tableName">Target Table Name</label>
+      <input type="text" id="tableName" placeholder="e.g. dbo.users or public.orders">
+
+      <label for="tableData">SQL Table Data</label>
+      <textarea id="tableData" placeholder="Paste your table data here. The first row should be the column headers, separated by tabs or pipes (|).
+
+Example:
+id	name	email	age
+1	Alice	alice@example.com	30
+2	Bob	bob@example.com	25"></textarea>
+      <p class="hint">Supports tab-separated or pipe-separated ( | ) data. First row must be column headers. You can copy-paste directly from SSMS, DBeaver, Excel, etc.</p>
+
+      <hr class="section-divider">
+
+      <label>Excluded Columns</label>
+      <p class="hint" style="margin-bottom: 10px;">The following columns are excluded from INSERT statements by default.</p>
+      <div class="excluded-defaults" id="excludedTags">
+        <span class="tag">datetimevalidfrom</span>
+        <span class="tag">datetimevalidto</span>
+      </div>
+
+      <label for="excludeInput">Add More Columns to Exclude</label>
+      <div class="add-exclude-row">
+        <input type="text" id="excludeInput" placeholder="e.g. createdby, modifieddate" onkeydown="handleExcludeKey(event)">
+        <button class="btn-add" onclick="addExcludeColumn()">+ Add</button>
+      </div>
+      <p class="hint" style="margin-top: 6px;">Press Enter or click Add. Separate multiple columns with commas.</p>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="generate()">Generate INSERT Statements</button>
+        <button class="btn-secondary" onclick="clearAll()">Clear</button>
+      </div>
+    </div>
+
+    <div class="card" id="outputCard" style="display:none;">
+      <div class="output-header">
+        <h2>Generated SQL</h2>
+        <span class="badge" id="rowCount"></span>
+        <button class="btn-copy" onclick="copyOutput()">Copy All</button>
+        <span id="copyFeedback">Copied!</span>
+      </div>
+      <div id="output"></div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_EXCLUDED = ['datetimevalidfrom', 'datetimevalidto'];
+    let userExcluded = [];
+
+    function handleExcludeKey(e) {
+      if (e.key === 'Enter') addExcludeColumn();
+    }
+
+    function addExcludeColumn() {
+      const input = document.getElementById('excludeInput');
+      const raw = input.value.trim();
+      if (!raw) return;
+
+      const entries = raw.split(',').map(s => s.trim().toLowerCase()).filter(s => s !== '');
+
+      entries.forEach(col => {
+        const alreadyDefault = DEFAULT_EXCLUDED.includes(col);
+        const alreadyUser = userExcluded.includes(col);
+        if (alreadyDefault || alreadyUser) return;
+
+        userExcluded.push(col);
+        renderUserTag(col);
+      });
+
+      input.value = '';
+    }
+
+    function renderUserTag(col) {
+      const container = document.getElementById('excludedTags');
+      const tag = document.createElement('span');
+      tag.className = 'tag user-tag';
+      tag.id = `tag-${col}`;
+      tag.innerHTML = `${col} <span class="remove-tag" onclick="removeExcludeColumn('${col}')" title="Remove">✕</span>`;
+      container.appendChild(tag);
+    }
+
+    function removeExcludeColumn(col) {
+      userExcluded = userExcluded.filter(c => c !== col);
+      const tag = document.getElementById(`tag-${col}`);
+      if (tag) tag.remove();
+    }
+
+    function getAllExcluded() {
+      return [...DEFAULT_EXCLUDED, ...userExcluded];
+    }
+
+    function detectSeparator(line) {
+      const tabCount = (line.match(/\t/g) || []).length;
+      const pipeCount = (line.match(/\|/g) || []).length;
+      return tabCount >= pipeCount ? '\t' : '|';
+    }
+
+    function parseValue(val) {
+      val = val.trim();
+      if (val === '' || val.toUpperCase() === 'NULL') return 'NULL';
+      if (/^-?\d+(\.\d+)?$/.test(val)) return val;
+      val = val.replace(/'/g, "''");
+      return `'${val}'`;
+    }
+
+    function generate() {
+      const tableName = document.getElementById('tableName').value.trim();
+      const rawData = document.getElementById('tableData').value.trim();
+      const outputDiv = document.getElementById('output');
+      const outputCard = document.getElementById('outputCard');
+
+      outputCard.style.display = 'block';
+
+      if (!tableName) {
+        outputDiv.innerHTML = '<span class="error">⚠ Please enter a target table name.</span>';
+        return;
+      }
+
+      if (!rawData) {
+        outputDiv.innerHTML = '<span class="error">⚠ Please paste some table data.</span>';
+        return;
+      }
+
+      const lines = rawData.split('\n').filter(l => l.trim() !== '');
+      if (lines.length < 2) {
+        outputDiv.innerHTML = '<span class="error">⚠ Need at least a header row and one data row.</span>';
+        return;
+      }
+
+      const sep = detectSeparator(lines[0]);
+      const allHeaders = lines[0].split(sep).map(h => h.trim());
+
+      const excluded = getAllExcluded();
+
+      // Build index map of which columns to keep
+      const keepIndices = [];
+      const keepHeaders = [];
+      allHeaders.forEach((h, i) => {
+        if (h !== '' && !excluded.includes(h.toLowerCase())) {
+          keepIndices.push(i);
+          keepHeaders.push(h);
+        }
+      });
+
+      if (keepHeaders.length === 0) {
+        outputDiv.innerHTML = '<span class="error">⚠ All columns have been excluded. No INSERT statement can be generated.</span>';
+        return;
+      }
+
+      const columnList = keepHeaders.map(h => `[${h}]`).join(', ');
+      const statements = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = line.split(sep);
+        while (values.length < allHeaders.length) values.push('');
+
+        const valueList = keepIndices.map(idx => parseValue(values[idx])).join(', ');
+        statements.push(`INSERT INTO ${tableName} (${columnList})\nVALUES (${valueList});`);
+      }
+
+      if (statements.length === 0) {
+        outputDiv.innerHTML = '<span class="error">⚠ No data rows found.</span>';
+        return;
+      }
+
+      document.getElementById('rowCount').textContent = `${statements.length} row${statements.length > 1 ? 's' : ''}`;
+      outputDiv.textContent = statements.join('\n\n');
+    }
+
+    function clearAll() {
+      document.getElementById('tableName').value = '';
+      document.getElementById('tableData').value = '';
+      document.getElementById('excludeInput').value = '';
+      document.getElementById('outputCard').style.display = 'none';
+      document.getElementById('output').textContent = '';
+
+      // Remove user tags from DOM
+      userExcluded.forEach(col => {
+        const tag = document.getElementById(`tag-${col}`);
+        if (tag) tag.remove();
+      });
+      userExcluded = [];
+    }
+
+    function copyOutput() {
+      const text = document.getElementById('output').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const fb = document.getElementById('copyFeedback');
+        fb.style.opacity = '1';
+        setTimeout(() => fb.style.opacity = '0', 2000);
+      });
+    }
+  </script>
+</body>
+</html>
